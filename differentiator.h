@@ -36,6 +36,7 @@ enum Operator_Types{
     POW = '^'
 };
 
+
 struct Node{
     Node* left;
     Node* right;
@@ -45,11 +46,11 @@ struct Node{
 
 };
 
+Node* node_New(Node_Type, double value);
+
 
 
 struct Tree{
-   
-
     void constructor();
 
     void init(const char* line);

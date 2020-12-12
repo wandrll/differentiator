@@ -11,11 +11,11 @@ FILE* begining_of_the_article(const char* file){
     FILE* fp = fopen(file, "w");
     fprintf(fp,"\\documentclass[]{article}\n"
                "\\usepackage[T1, T2A]{fontenc}\n"
+               "\\usepackage{hyperref}\n"
                "\\usepackage[utf8]{inputenc}\n"
                "\\usepackage[english,russian]{babel}\n"
                "\\usepackage{indentfirst}\n"
-               "\\usepackage[left=1cm,right=1cm,"
-                            "top=2cm,bottom=2cm,bindingoffset=0cm]{geometry}"
+            //    "\\usepackage[left=1cm,right=1cm,top=2cm,bottom=2cm,bindingoffset=0cm]{geometry}"
                "\\usepackage{misccorr}\n"
                "\\usepackage{graphicx}\n"
                "\\usepackage{pgfplots}"
@@ -40,8 +40,8 @@ FILE* begining_of_the_article(const char* file){
                "%\\textsc{\\textbf{}} \n"
                "\\vspace{5em}\n"                                         
                "\\begin{center}\n"
-               "%\\Large \n"          
-               "Исследование функций под воздейстивем факторов разрушающих организм\n"          
+               "\\Large{ "          
+               "Исследование функций под воздейстивем факторов разрушающих организм}\n"          
                " \\end{center}\n"
                "\\vspace{6em}\n"
                "%\\begin{center}\n"
@@ -64,14 +64,15 @@ void end_of_the_article(FILE* fp){
     assert(fp != NULL);
     fprintf(fp,     "\\begin{thebibliography}{3}"
                     "\\bibitem{matan}"
-                    "Л.Д Кудрявцев и Co.: Сборник задач по математическому анализу"
-                    "\\bibitem{Pivo}"
-                    "Агафонов Валерий Павлович, Оболенский Николай Васильевич: Стратегии потребления пива"
+                    "Л.Д Кудрявцев и Co.: Сборник задач по математическому анализу\n"
                     "\\bibitem{Zadav}"
-                    "Хз кто авторы: Задавальник на 1 семестр 2020 года"
-
-                    "\\end{thebibliography}"
-                    "\\end{document}");
+                    "Хз кто авторы: Задавальник на 1 семестр 2020 года\n"
+                    "\\bibitem{github}"
+                    "\\href{https://github.com/wandrll/differentiator}{https://github.com/wandrll/differentiator}\n"
+                    "\\bibitem{necro}"
+                    "Некрономикон, издание 3, исправленно, адаптированное для детей от 3х лет\n"
+                    "\\end{thebibliography}\n"
+                    "\\end{document}\n");
     fclose(fp);
 }
 
@@ -212,7 +213,13 @@ void Tree::recursive_tex_print(Node* node, FILE* fp){
                 fprintf(fp, "e");
                 break;
             }
+            if(node->value < 0){
+                fprintf(fp, "\\left(");
+            }
             fprintf(fp, "%lg", node->value);
+            if(node->value < 0){
+                fprintf(fp, "\\right)");
+            }
             break;
         }
 
@@ -352,34 +359,44 @@ void Tree::print_ful_derivative(FILE* fp){
 void Tree::generate_article(){
 
     FILE* fp = begining_of_the_article("Article.tex");
+    fprintf(fp,"\\section{}");
     fprintf(fp, "\\par Добро пожаловать в эту статью дорогой читатель, в этой статье мы поизучаем функцию\n\n f(x) = ");
     this->print_tex_expression(fp);
+
     fprintf(fp, "\n\\parДавайте для начала немного упростим это выражение\n\n");
     this->simplificate_expression(fp);
+
     fprintf(fp, "\n\\parИтоговое выражение будет иметь слелующий вид:\n\n $f(x) = $");
     this->print_tex_expression(fp);
 
     Tree tayl = {};
+    fprintf(fp,"\\section{}");
     
     fprintf(fp, "\\parИнтереснейшая на мой взгляд функция, которая обладает блаблаблабла\n"
                 "\nА вот таким образом выглядит ее график\n");
     this->print_tex_plot_x(fp, -30, 30, 0.01);
+
     fprintf(fp, "\\parУдивительной красоты график! Давайте теперь возьмем производную этой функции по x. Легко заметить что она будет иметь следующий вид:\n\n\n");
     Tree tmp = {};
+
     tmp.constructor();
     tmp.derivative(this, 'x');
+
     fprintf(fp, "$ f^{(1)}(x) = $");
     tmp.print_tex_expression(fp);
     fprintf(fp, "\n\n\\parДавайте немного упростим это и без того не сложное выражение\n\n");
 
 
     tmp.simplificate_expression(fp);
-
+    fprintf(fp,"\\section{}");
     fprintf(fp, "\n\n \\parИтоговая формула будет иметь следущий вид:\n\n\n$ f^{(1)}(x) = $");
+    
+
     tmp.print_tex_expression(fp);
 
     tmp.print_tex_plot_x(fp, -30, 30, 0.01);
     fprintf(fp, "\\parНетрудно заметить что так выглядит график проивзодной");
+    fprintf(fp,"\\section{}");
 
     fprintf(fp, "\n\n\\parМало кто знает, но существует такая шикарная вещь как формула Тейлора, позволяющая апроксимировать функцию в точке\n\n"
                 "\n$ при x \\rightarrow x_0 $\n\n$f(x) = f(x_0) + \\frac{f^{(1)}(x_0)}{1!} \\cdot (x-x_0)^{1}"
@@ -389,7 +406,8 @@ void Tree::generate_article(){
 
     fprintf(fp, "\n\n \\parДавайте разложим функцию в точке 0 по Тейлору и сравним графики полученной функции и первоначального выражения\n\n");
     tayl.constructor();
-    tayl.taylor(this, 'x', 8, 0);
+    tayl.taylor(this, 'x', 6, 0);
+
     fprintf(fp, "$ f^{(1)}(x) = $");
     tayl.print_tex_expression(fp);
 
@@ -397,9 +415,11 @@ void Tree::generate_article(){
 
     fprintf(fp, "Очевидно, что 2 эти графика практически совпадают друг с другом\n\n\n");
     fprintf(fp, "\n\nТакже, можно записать полный дифференциал данной функции\n\n");
+
     this->print_ful_derivative(fp);
 
 
+    fprintf(fp,"\\section{}");
 
     fprintf(fp,"\n\n\\parКакой же вывод из всего этого можно сделать? Во-первых, Латех будт падать, если "
                 "попробовать нарисовать график с огромным количеством точек. Во-вторых, "
@@ -411,5 +431,6 @@ void Tree::generate_article(){
 
     tmp.destructor();
     tayl.destructor();
+    
     system("pdflatex Article.tex");
 }

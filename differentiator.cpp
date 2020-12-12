@@ -16,6 +16,14 @@ void Node::constructor(Node_Type type, double value){
     this->value = value;
 }
 
+Node* node_New(Node_Type type, double value){
+    Node* res = (Node*)calloc(1, sizeof(Node));
+    res->constructor(type, value);
+    return res;
+}
+
+
+
 void Tree::constructor(){
     this->variables = (double*)calloc(variables_count, sizeof(double));
 }
@@ -116,10 +124,9 @@ Node* Tree::getPow(){
         Node* right = getPrim();
         Node* left = val;
         
-        val = (Node*)calloc(1, sizeof(Node));
+        val = node_New(OPERATOR, POW);
         val->left = left;
         val->right = right;
-        val->constructor(OPERATOR, POW);
         
     }
     return val;
@@ -143,15 +150,15 @@ Node* Tree::getPrim(){
                 return getFunc();
             }else{
                 if(*(this->curr_pointer) == 'e'){
-                    Node* res = (Node*)calloc(1, sizeof(Node));
-                    res->constructor(VALUE, M_E);
+                    Node* res = node_New(VALUE, M_E);
+
                     (this->curr_pointer)++;
                     return res;
                 }
 
                 if(*(this->curr_pointer) == 'p'){
-                    Node* res = (Node*)calloc(1, sizeof(Node));
-                    res->constructor(VALUE, M_PI);
+                    Node* res = node_New(VALUE, M_PI);
+
                     (this->curr_pointer)++;
                     return res;
                 }
@@ -170,8 +177,8 @@ Node* Tree::getNum(){
     sscanf(this->curr_pointer, "%lg%n", &val, &count);
 
     this->curr_pointer+=(count);
-    Node* res = (Node*)calloc(1, sizeof(Node));
-    res->constructor(VALUE, val);
+    Node* res = node_New(VALUE, val);
+    
     return res;
 }
 
@@ -189,8 +196,8 @@ Node* Tree::getVar(){
         return NULL;
     }
 
-    Node* res = (Node*)calloc(1, sizeof(Node));
-    res->constructor(VARIABLE, *(this->curr_pointer) - 'a');
+    Node* res = node_New(VARIABLE, *(this->curr_pointer) - 'a');
+
     (this->curr_pointer)++;
 
     
@@ -229,8 +236,9 @@ Node* Tree::getFunc(){
     if(func == _error){
         return NULL;
     }
-    Node* res = (Node*)calloc(1, sizeof(Node));
-    res->constructor(FUNCTION, func);
+
+    Node* res = node_New(FUNCTION, func);
+
     (this->curr_pointer) += len;
     res->right = getPrim();
     return res;
@@ -353,7 +361,6 @@ void Tree::fill_variables(const char* variables, ...){
     while(*variables != 0){
         double curr = va_arg(args, double);
         this->variables[*variables - 'a'] = curr;
-        // printf("--- %lg ---\n", tree->variables[*variables - 'a']);
         variables++;
     }
     
@@ -450,16 +457,14 @@ double Tree::evaluate(){
 
 
 static Node* _PLUS(Node* left, Node* right){
-    Node* res =(Node*)calloc(1, sizeof(Node));
-    res->constructor(OPERATOR, PLUS);
+    Node* res = node_New(OPERATOR, PLUS);
     res->left = left;
     res->right = right;
     return res;
 }
 
 static Node* _MINUS(Node* left, Node* right){
-    Node* res =(Node*)calloc(1, sizeof(Node));
-    res->constructor(OPERATOR, MINUS);
+    Node* res = node_New(OPERATOR, MINUS);
     res->left = left;
     res->right = right;
     return res;
@@ -467,45 +472,42 @@ static Node* _MINUS(Node* left, Node* right){
 }
 
 static Node* _MUL(Node* left, Node* right){
-    Node* res =(Node*)calloc(1, sizeof(Node));
-    res->constructor(OPERATOR, MUL);
+    Node* res = node_New(OPERATOR, MUL);
     res->left = left;
     res->right = right;
     return res;
 }
 
 static Node* _DIV(Node* left, Node* right){
-    Node* res =(Node*)calloc(1, sizeof(Node));
-    res->constructor(OPERATOR, DIV);
+    Node* res = node_New(OPERATOR, DIV);
+
     res->left = left;
     res->right = right;
     return res;
 }
 
 static Node* _POW(Node* left, Node* right){
-    Node* res =(Node*)calloc(1, sizeof(Node));
-    res->constructor(OPERATOR, POW);
+    Node* res = node_New(OPERATOR, POW);
+
     res->left = left;
     res->right = right;
     return res;
 }
 
 static Node* _NODE_BY_VAL(double val){
-    Node* res = (Node*)calloc(1, sizeof(Node));
-    res->constructor(VALUE, val);
+    Node* res = node_New(VALUE, val);
+
     return res;
 }
 
 static Node* _NODE_BY_VAR(const char var){
-    Node* res = (Node*)calloc(1, sizeof(Node));
-    res->constructor(VARIABLE, var - 'a');
+    Node* res = node_New(VARIABLE, var - 'a');
     return res;
 }
 
 #define FUNCTION(name, num, code)                       \
-    static Node* node##name (Node* node){            \
-        Node* res =(Node*)calloc(1, sizeof(Node));      \
-        res->constructor(FUNCTION, _##name);          \
+    static Node* node##name (Node* node){               \
+        Node* res = node_New(FUNCTION, _##name);       \
         res->right = node;                              \
         return res;                                     \
     }
@@ -603,8 +605,7 @@ void Tree::taylor(Tree* expression, const char var, int count, double point){
     *variable = var;
     tmp.fill_variables(variable, point);
 
-    this->root = (Node*)calloc(1, sizeof(Node));
-    this->root->constructor(VALUE, tmp.evaluate());
+    this->root = node_New(VALUE, tmp.evaluate());
     double fact = 1;
 
     for(int i = 1; i <= count; i++){
@@ -613,7 +614,7 @@ void Tree::taylor(Tree* expression, const char var, int count, double point){
         tmp.simplificate_expression();
         double res = tmp.evaluate();
         if(res > 0){
-            this->root = _PLUS(this->root, _MUL(_DIV(_NODE_BY_VAL(res),_NODE_BY_VAL(fact)), _POW(_MINUS(_NODE_BY_VAR(var), _NODE_BY_VAL(point)), _NODE_BY_VAL(i))));
+            this->root = _PLUS (this->root, _MUL(_DIV(_NODE_BY_VAL( res),_NODE_BY_VAL(fact)), _POW(_MINUS(_NODE_BY_VAR(var), _NODE_BY_VAL(point)), _NODE_BY_VAL(i))));
         }else{
             this->root = _MINUS(this->root, _MUL(_DIV(_NODE_BY_VAL(-res),_NODE_BY_VAL(fact)), _POW(_MINUS(_NODE_BY_VAR(var), _NODE_BY_VAL(point)), _NODE_BY_VAL(i))));
         }
@@ -630,13 +631,17 @@ void Tree::taylor(Tree* expression, const char var, int count, double point){
 //////////////////////////////////////////SIMPLIFICATE BLOCK////////////////////////////////////////
 
 const double precision = 1e-8;
-
-bool is_int(double x){
-    if(fabs((double)((int)x) - x) < precision){
+bool double_cmp(double a, double b){
+    if(fabs(a-b) < precision){
         return true;
     }else{
         return false;
     }
+}
+
+
+bool is_int(double x){
+    return double_cmp(x, (double)((int)x));
 }
 
 
@@ -669,24 +674,69 @@ bool value_node_cmp(Node* left, Node* right){
 
 void Tree::print_before(Node* node, FILE* fp){
     if(fp != NULL){
-        fprintf(fp, "\\begin{center}\n%s\n\\end{center}\n$$g(x) = ", begin[rand()%begin_count]);
+        int d = rand()%begin_count;
+        fprintf(fp, "\\begin{center}\n%s", begin[d]);
+        if(d == 7){
+            fprintf(fp, "\\cite{necro}");
+        }
+        fprintf(fp, "\n\n$g(x) = ");
         recursive_tex_print(node, fp);
-        fprintf(fp, "$$\n");
+        fprintf(fp, "$\n\\end{center}");
     }
 }
 
 
 void Tree::print_after(Node* node, FILE* fp){
     if(fp != NULL){
-        fprintf(fp, "\\begin{center}\n%s\n\\end{center}\n$$g(x) = ", end[rand()%end_count]);
+        fprintf(fp, "\\begin{center}\n%s\n\n$g(x) = ", end[rand()%end_count]);
         recursive_tex_print(node, fp);
-        fprintf(fp, "$$\n\n\n\n\n\n");
+        fprintf(fp, "$\\end{center}\n\n\n\n\n\n");
     }
 }
 
 
+bool isValue(Node* node){
+    if(node->type == VALUE){
+        return true;
+    }else{
+        return false;
+    }
+}
+
+bool isVariable(Node* node){
+    if(node->type == VARIABLE){
+        return true;
+    }else{
+        return false;
+    }
+}
+
+bool isOperator(Node* node){
+    if(node->type == OPERATOR){
+        return true;
+    }else{
+        return false;
+    }
+}
+
+bool isZero(Node* node){
+    if(double_cmp(node->value, 0)){
+        return true;
+    }else{
+        return false;
+    }
+}
+
+bool isOne(Node* node){
+    if(double_cmp(node->value, 1)){
+        return true;
+    }else{
+        return false;
+    }
+}
+
 Node* Tree::simplify_plus(Node* node, FILE* fp){
-    if(node->left->type == VALUE && node->left->value == 0){
+    if(isValue(node->left) && isZero(node->left)){
         print_before(node, fp);
 
         free(node->left);
@@ -696,7 +746,7 @@ Node* Tree::simplify_plus(Node* node, FILE* fp){
         print_after(res, fp);
         return res;
     }
-    if(node->right->type == VALUE && node->right->value == 0){
+    if(isValue(node->right) && isZero(node->right)){
         print_before(node, fp);
 
         free(node->right);
@@ -726,7 +776,7 @@ Node* Tree::simplify_plus(Node* node, FILE* fp){
 
 
 Node* Tree::simplify_mul(Node* node, FILE* fp){
-    if(node->left->type == VALUE && node->left->value == 1){
+    if(isValue(node->left) && isOne(node->left)){
         print_before(node, fp);
 
         free(node->left);
@@ -736,7 +786,7 @@ Node* Tree::simplify_mul(Node* node, FILE* fp){
         print_after(res, fp);
         return res;
     }
-    if(node->right->type == VALUE && node->right->value == 1){
+    if(isValue(node->right) && isOne(node->right)){
         print_before(node, fp);
 
         free(node->right);
@@ -747,7 +797,7 @@ Node* Tree::simplify_mul(Node* node, FILE* fp){
         return res;
     }
     
-    if(node->left->type == VALUE && node->left->value == 0){
+    if(isValue(node->left) && isZero(node->left)){
         print_before(node, fp);
 
         recursive_delete(node->right);
@@ -758,7 +808,7 @@ Node* Tree::simplify_mul(Node* node, FILE* fp){
         return res;
     }
 
-    if(node->right->type == VALUE && node->right->value == 0){
+    if(isValue(node->right) && isZero(node->right)){
         print_before(node, fp);
 
         recursive_delete(node->left);
@@ -783,9 +833,9 @@ Node* Tree::simplify_mul(Node* node, FILE* fp){
         return recursive_simplificate(node, fp);;
     }
 
-    if(node->left ->type == VARIABLE &&
-       node->right->type == VARIABLE &&
-       node->left->value == node->right->value){
+    if(isVariable(node->left ) &&
+       isVariable(node->right) &&
+       double_cmp(node->left->value, node->right->value)){
             print_before(node, fp);
 
             recursive_delete(node->right->right);
@@ -798,9 +848,9 @@ Node* Tree::simplify_mul(Node* node, FILE* fp){
             return recursive_simplificate(node, fp);;
     }
 
-    if(node->right->type == VARIABLE && node->left->type == OPERATOR
-    && node->left->value == POW      && node->left->left->type == VARIABLE){
-        if(node->right->value == node->left->left->value){
+    if(isVariable(node->right) && isOperator(node->left) &&
+      node->left->value == POW && isVariable(node->left->left)){
+        if(double_cmp(node->right->value, node->left->left->value)){
             print_before(node, fp);
 
             Node* res = node->left;
@@ -817,9 +867,9 @@ Node* Tree::simplify_mul(Node* node, FILE* fp){
     }
 
 
-    if(node->left->type == VARIABLE && node->right->type == OPERATOR 
-    && node->right->value == POW    && node->right->left->type == VARIABLE){
-        if(node->left->value == node->right->left->value){
+    if(isVariable(node->left) && isOperator(node->right) &&
+    node->right->value == POW && isVariable(node->right->left)){
+        if(double_cmp(node->left->value, node->right->left->value)){
             print_before(node, fp);
 
             Node* res = node->right;
@@ -841,7 +891,7 @@ Node* Tree::simplify_mul(Node* node, FILE* fp){
 }
 
 Node* Tree::simplify_minus(Node* node, FILE* fp){
-    if(node->right->type == VALUE && node->right->value == 0){
+    if(isValue(node->right) && isZero(node->right)){
         print_before(node, fp);
 
         free(node->right);
@@ -851,7 +901,7 @@ Node* Tree::simplify_minus(Node* node, FILE* fp){
         print_after(res, fp);
         return res;
     }
-    if(node->left->type == VALUE && node->left->value == 0){
+    if(isValue(node->left) && isZero(node->left)){
         print_before(node, fp);
 
         node->left->value = -1;
@@ -864,7 +914,7 @@ Node* Tree::simplify_minus(Node* node, FILE* fp){
 }
 
 Node* Tree::simplify_div(Node* node, FILE* fp){
-    if(node->left->type == VALUE && node->left->value == 0){
+    if(isValue(node->left) && isZero(node->left)){
         print_before(node, fp);
 
         recursive_delete(node->right);
@@ -874,8 +924,8 @@ Node* Tree::simplify_div(Node* node, FILE* fp){
         print_after(res, fp);
         return res;
     }
-    if(node->left ->type == VALUE &&
-       node->right->type == VALUE && 
+    if(isValue(node->left ) &&
+       isValue(node->right) && 
        is_int(node->left ->value)  && 
        is_int(node->right->value)){
 
@@ -890,11 +940,11 @@ Node* Tree::simplify_div(Node* node, FILE* fp){
             node->right->value = right/g;
             if(g != 1){
                 print_after(node, fp);
+                return simplify_div(node, fp);
             }
-            return node;
     }
 
-    if(node->right->type == VALUE && node->right->value == 1){
+    if(isValue(node->right) && isOne(node->right)){
         print_before(node, fp);
 
         free(node->right);
@@ -921,7 +971,7 @@ Node* Tree::simplify_div(Node* node, FILE* fp){
 
 
 Node* Tree::simplify_pow(Node* node, FILE* fp){
-    if(node->right->type == VALUE && node->right->value == 1){
+    if(isValue(node->right) && isOne(node->right)){
         print_before(node, fp);
 
         free(node->right);
@@ -931,7 +981,7 @@ Node* Tree::simplify_pow(Node* node, FILE* fp){
         print_after(res, fp);
         return res;
     }
-    if(node->right->type == VALUE && node->right->value == 0){
+    if(isValue(node->right)&& isZero(node->right)){
         print_before(node, fp);
 
         free(node->left);
@@ -942,7 +992,7 @@ Node* Tree::simplify_pow(Node* node, FILE* fp){
         print_after(res, fp);
         return res;
     }
-    if(node->left->type == VALUE && node->left->value == 1){
+    if(isValue(node->left) && isOne(node->left)){
         print_before(node, fp);
 
         free(node->right);
@@ -952,7 +1002,7 @@ Node* Tree::simplify_pow(Node* node, FILE* fp){
         print_after(res, fp);
         return res;
     }
-    if(node->left->type == VALUE && node->left->value == 0){
+    if(isValue(node->left) && isZero(node->left)){
         print_before(node, fp);
 
         recursive_delete(node->right);
@@ -976,14 +1026,16 @@ Node* Tree::recursive_simplificate(Node* node, FILE* fp){
     switch(node->type){
         case OPERATOR:{
            
-            if(node->right->type == VALUE && node->left->type == VALUE && node->value != DIV &&
-               node->right->value != M_PI && node->right->value != M_E &&
-               node->left ->value != M_PI && node->left ->value != M_E){
+            if(isValue(node->right) && isValue(node->left) && node->value != DIV &&
+               !double_cmp(node->right->value, M_PI) && !double_cmp(node->right->value, M_E) &&
+               !double_cmp(node->left ->value, M_PI) && !double_cmp(node->left ->value, M_E)){
                 print_before(node, fp);
 
                 double res = recursive_evaluate(node);
+
                 free(node->left );
                 free(node->right);
+                
                 node->left  = NULL;
                 node->right = NULL;
                 node->value = res;
@@ -1018,28 +1070,9 @@ Node* Tree::recursive_simplificate(Node* node, FILE* fp){
         }
     }
     return node;
-/*
-    if(node->type == FUNCTION && node->right->type == VALUE){
-        #define FUNCTION(name, num, code)                   \
-            case num:{                                      \
-                node->value = name(node->right->value);     \
-                node->type = VALUE;                         \
-                free(node->right);                          \
-            }
-
-        switch((char)node->value){
-            #include "functions.h"
-        }    
-
-        #undef FUNCTION
-        return;
-    }
-*/
-    
 }
 
 
 void Tree::simplificate_expression(FILE* fp){
     this->root = recursive_simplificate(this->root, fp);
-
 }
