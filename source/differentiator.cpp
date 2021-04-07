@@ -4,12 +4,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "differentiator.h"
+#include "../headers/differentiator.h"
 #include <ctype.h>
 #include <sys/stat.h>
-#include "own_functions.h"
-#include "begin.h"
-#include "end.h"
+#include "../headers/own_functions.h"
+#include "../headers/begin.h"
+#include "../headers/end.h"
 #include <time.h>
 void Node::constructor(Node_Type type, double value){
     this->type = type;
@@ -221,7 +221,7 @@ Function_Types get_func_type(const char* s, int size){
             return (Function_Types)num;         \
         }
 
-    #include "functions.h"
+    #include "../headers/functions.h"
 
     #undef FUNCTION
 
@@ -395,7 +395,7 @@ double Tree::recursive_evaluate(Node* node){
             }
 
         switch((char)node->value){
-            #include "functions.h"
+            #include "../headers/functions.h"
         }    
 
         #undef FUNCTION
@@ -512,7 +512,7 @@ static Node* _NODE_BY_VAR(const char var){
         return res;                                     \
     }
 
-#include "functions.h"
+#include "../headers/functions.h"
 
 #undef FUNCTION
 
@@ -563,7 +563,7 @@ Node* Tree::recursive_derivative(Node* node, int var){
                 case num: code                  
                                                 
             switch((int)node->value){
-                #include "functions.h"
+                #include "../headers/functions.h"
             }
             #undef FUNCTION
 

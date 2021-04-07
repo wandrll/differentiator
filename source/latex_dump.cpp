@@ -4,7 +4,7 @@
 #include <stdio.h>
 
 
-#include "latex_dump.h"
+#include "../headers/latex_dump.h"
 
 FILE* begining_of_the_article(const char* file){
     assert(file != NULL);
@@ -89,7 +89,7 @@ void print_function(int number, FILE* fp){
         }  
 
     switch(number){
-        #include "functions.h"
+        #include "../headers/functions.h"
     }
     #undef FUNCTION
 

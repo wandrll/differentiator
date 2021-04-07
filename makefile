@@ -4,17 +4,17 @@ TMP = -fsanitize=address -fsanitize=alignment -fsanitize=bool -fsanitize=bounds 
 CTEMP=-Wall -Werror -Wextra -pedantic -Wshadow -Wconversion -Wsign-conversion
 all: diff
 
-diff: differentiator.o main.o latex_dump.o functions.h
-	g++ $(LDFLAGS) differentiator.o main.o latex_dump.o -o diff 
+diff: source/differentiator.o main.o source/latex_dump.o headers/functions.h
+	g++ $(LDFLAGS) source/differentiator.o main.o source/latex_dump.o -o diff 
 
-main.o: main.cpp functions.h
+main.o: main.cpp headers/functions.h
 	g++ $(CFLAGS) main.cpp
 
-latex_dump.o: latex_dump.cpp functions.h
-	g++ $(CFLAGS) latex_dump.cpp
+latex_dump.o: source/latex_dump.cpp headers/functions.h
+	g++ $(CFLAGS) source/latex_dump.cpp
 
-differentiator.o: differentiator.cpp functions.h
-	g++ $(CFLAGS) differentiator.cpp
+differentiator.o: source/differentiator.cpp headers/functions.h
+	g++ $(CFLAGS) source/differentiator.cpp
 
 clean:
 	rm -rf *.o 
